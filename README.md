@@ -229,6 +229,39 @@ Examples:
 /extensions install ./local-folder/
 ```
 
+## Model-specific extension disabling
+
+Create `~/.pi/agent/extmgr-models.json` (or `$PI_CODING_AGENT_DIR/extmgr-models.json`):
+
+```json
+{
+  "version": 1,
+  "rules": [
+    {
+      "model": "anthropic/claude-*",
+      "disable": [
+        { "scope": "global", "path": "extensions/my-extension.ts" },
+        { "scope": "project", "path": "extensions/project-helper/index.ts" },
+        {
+          "scope": "global",
+          "package": "npm:my-tools",
+          "extensions": ["extensions/expensive-tool.ts"]
+        }
+      ]
+    }
+  ]
+}
+```
+
+- Model selectors are case-sensitive `provider/model-id` strings. `*` matches any text; matching rules are combined. Use `*/*` for every model.
+- Local paths are relative to the scope's settings directory (`~/.pi/agent` or `<cwd>/.pi`), or absolute; `~/` is supported. Use extension entrypoint paths, not display names.
+- Package sources must exactly match an entry in that scope's `settings.json`, including any version/ref. Package extension paths are relative to the package root; globs such as `extensions/**` are accepted. Exact paths override force-includes; glob exclusions do not override explicit `+path` filters.
+- Only extensions are affected, not package skills, prompts or themes. Project targets are ignored in untrusted projects. Keep pi-extmgr itself enabled.
+- Rules are checked on startup, session restoration, and model changes. After editing the JSON, use `/reload` or change models; there is no file watcher.
+- Changes automatically reload Pi's resources when idle, or after the current response settles. This resets extension state; already-applied external side effects cannot be undone. On startup, extensions may run initialization before the corrective reload.
+- Switching to an unmatched model (or deleting the rules file) restores exclusions owned by these rules. Manually disabled extensions remain disabled. Ownership is recorded alongside filters in `settings.json`; do not edit the `piExtmgrModel*` fields.
+- Invalid JSON or rules are reported without replacing the configuration. Settings writes use atomic replacement. These filters are persisted per scope: multiple simultaneous Pi processes sharing settings should not use different model rules.
+
 ## Whole-package enable/disable
 
 Select a package and choose **Disable package** (or use **B** for bulk actions) to

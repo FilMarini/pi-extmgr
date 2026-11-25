@@ -18,6 +18,7 @@ import {
   showNonInteractiveHelp,
   showUnknownCommandMessage,
 } from "./commands/registry.js";
+import { registerModelRules } from "./extensions/model-rules.js";
 import { installPackage } from "./packages/install.js";
 import { restorePiTitle } from "./ui/workspace/title.js";
 import {
@@ -70,6 +71,7 @@ async function executeExtensionsCommand(
 }
 
 export default function extensionsManager(pi: ExtensionAPI) {
+  registerModelRules(pi);
   pi.registerCommand("extensions", {
     description: "Manage local extensions and browse/install community packages",
     getArgumentCompletions: getExtensionsAutocompleteItems,
